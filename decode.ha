@@ -1,10 +1,15 @@
 export type bindata = []u8;
 
-export type node = (bool | i16 | i32 | i64);
+export type node = (bool | i8 | i16 | i32 | i64);
 
 export fn decode_bool(d: bindata) (bool | decode_error) = {
 	assert_data_length(d, 1)?;
 	return d[0] != 0;
+};
+
+export fn decode_i8(d: bindata) (i8 | decode_error) = {
+	assert_data_length(d, 1)?;
+	return d[0]: i8;
 };
 
 export fn decode_i16(d: bindata) (i16 | decode_error) = {
@@ -52,6 +57,23 @@ fn assert_data_length(d: bindata, n: size) (void | decode_error) = {
 
 @test fn decode_bool_too_many_bytes() void = {
 	let e = decode_bool([0x0A, 0x1B]): out_of_bounds;
+	assert(e.limit == 2);
+	assert(e.n == 1);
+};
+
+@test fn decode_i8_happy_path() void = {
+	let i = decode_i8([0x2C])!;
+	assert(i == 0x2C);
+};
+
+@test fn decode_i8_not_enough_bytes() void = {
+	let e = decode_i8([]): out_of_bounds;
+	assert(e.limit == 0);
+	assert(e.n == 1);
+};
+
+@test fn decode_i8_too_many_bytes() void = {
+	let e = decode_i8([0x0A, 0xFF]): out_of_bounds;
 	assert(e.limit == 2);
 	assert(e.n == 1);
 };
